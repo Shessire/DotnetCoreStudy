@@ -65,7 +65,7 @@ namespace DotnetCoreStudy.Areas.Customer.Controllers
                 cart.Price = GetPriceBasedOnQuantity(cart);
                 ShoppingCartVM.OrderHeader.OrderTotal += (cart.Price * cart.Count);
             }
-            return View();
+            return View(ShoppingCartVM);
         }
 
         public IActionResult Plus(int cartId)
