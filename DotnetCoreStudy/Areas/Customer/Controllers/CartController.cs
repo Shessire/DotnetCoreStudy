@@ -4,6 +4,7 @@ using DotnetCoreStudy.Models.ViewModels;
 using DotnetCoreStudy.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
 using System.Security.Claims;
 
 namespace DotnetCoreStudy.Areas.Customer.Controllers
@@ -73,10 +74,10 @@ namespace DotnetCoreStudy.Areas.Customer.Controllers
 
         [HttpPost]
         [ActionName("Summary")]
-		public IActionResult SummaryPOST(ShoppingCartVM shoppingCartVM)
-		{
-			var claimsIdentity = (ClaimsIdentity)User.Identity;
-			var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
+        public IActionResult SummaryPOST(ShoppingCartVM shoppingCartVM)
+        {
+            var claimsIdentity = (ClaimsIdentity)User.Identity;
+            var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
             ShoppingCartVM.ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == userId,
                 includeProperties: "Product");
@@ -84,15 +85,15 @@ namespace DotnetCoreStudy.Areas.Customer.Controllers
             ShoppingCartVM.OrderHeader.OrderDate = System.DateTime.Now;
             ShoppingCartVM.OrderHeader.ApplicationUserId = userId;
 
-			ShoppingCartVM.OrderHeader.ApplicationUser = _unitOfWork.ApplicationUser.Get(u => u.Id == userId);
+            ApplicationUser applicationUser = _unitOfWork.ApplicationUser.Get(u => u.Id == userId);
 
-			foreach (var cart in ShoppingCartVM.ShoppingCartList)
-			{
-				cart.Price = GetPriceBasedOnQuantity(cart);
-				ShoppingCartVM.OrderHeader.OrderTotal += (cart.Price * cart.Count);
-			}
+            foreach (var cart in ShoppingCartVM.ShoppingCartList)
+            {
+                cart.Price = GetPriceBasedOnQuantity(cart);
+                ShoppingCartVM.OrderHeader.OrderTotal += (cart.Price * cart.Count);
+            }
 
-            if (ShoppingCartVM.OrderHeader.ApplicationUser.CompanyId.GetValueOrDefault() == 0)
+            if (applicationUser.CompanyId.GetValueOrDefault() == 0)
             {
                 ShoppingCartVM.OrderHeader.PaymentStatus = SD.PaymentStatusPending;
                 ShoppingCartVM.OrderHeader.OrderStatus = SD.StatusPending;
@@ -105,7 +106,7 @@ namespace DotnetCoreStudy.Areas.Customer.Controllers
 
             _unitOfWork.OrderHeader.Add(ShoppingCartVM.OrderHeader);
             _unitOfWork.Save();
-            foreach(var cart in ShoppingCartVM.ShoppingCartList)
+            foreach (var cart in ShoppingCartVM.ShoppingCartList)
             {
                 OrderDetail orderDetail = new()
                 {
@@ -116,10 +117,21 @@ namespace DotnetCoreStudy.Areas.Customer.Controllers
                 };
                 _unitOfWork.OrderDetail.Add(orderDetail);
                 _unitOfWork.Save();
-            } 
+            }
 
-			return View(ShoppingCartVM);
-		}
+            if (applicationUser.CompanyId.GetValueOrDefault() == 0)
+            {
+
+            }
+
+            return RedirectToAction(nameof(OrderConfirmation), new { id = shoppingCartVM.OrderHeader.Id });
+
+        }
+
+        public IActionResult OrderConfirmation(int id)
+        {
+            return View(id);
+        }
 
 		public IActionResult Plus(int cartId)
         {
