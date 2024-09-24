@@ -96,6 +96,7 @@ namespace DotnetCoreStudy.Areas.Admin.Controllers
         }
 
 
+
         #region API CALLS
         [HttpGet]
         public IActionResult GetAll(string status)
