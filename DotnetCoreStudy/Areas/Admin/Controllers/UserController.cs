@@ -30,6 +30,14 @@ namespace DotnetCoreStudy.Areas.Admin.Controllers
         public IActionResult GetAll()
         {
             List<ApplicationUser> objUserList = _db.ApplicationUsers.Include(u => u.Company).ToList();
+            foreach(var user in objUserList)
+            {
+                if(user.Company== null)
+                {
+                    user.Company = new() { Name = "" };
+                }
+            }
+            
             return Json(new {data = objUserList});
         }
 
@@ -39,9 +47,5 @@ namespace DotnetCoreStudy.Areas.Admin.Controllers
             return Json(new { success = true, message = "Delete Successful" });
         }
         #endregion
-    }
-
-    internal class ApplcationDbContext
-    {
     }
 }
